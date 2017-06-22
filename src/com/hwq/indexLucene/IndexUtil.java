@@ -2,6 +2,8 @@ package com.hwq.indexLucene;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -11,6 +13,10 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
@@ -30,10 +36,14 @@ public class IndexUtil {
 	private int[] attachs = {2,3,1,4,5,5};
 	private String[] names = {"zhangsan","lisi","john","jetty","mike","jake"};
 	private Directory directory = null;
+	private Map<String,Float> map = new HashMap<String,Float>();
+	IndexSearcher searcher = null;
 	
 	public IndexUtil(){
 		try {
 			directory = FSDirectory.open(new File("/Users/Macx/lucene/index02"));
+			map.put("itat.org", 2.0f);
+			map.put("zttc.edu", 1.5f);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -210,6 +220,13 @@ public class IndexUtil {
 				doc.add(new Field("emails", emails[i], Field.Store.YES,Field.Index.NOT_ANALYZED));
 				doc.add(new Field("contents", contents[i], Field.Store.NO,Field.Index.ANALYZED));
 				doc.add(new Field("names", names[i], Field.Store.YES,Field.Index.NOT_ANALYZED_NO_NORMS));
+				String etc = emails[i].substring(emails[i].lastIndexOf("@")+1);
+				System.out.println(etc);
+				if(map.containsKey(etc)){
+					doc.setBoost(map.get(etc));
+				}else{
+					doc.setBoost(0.5f);
+				}
 				writer.addDocument(doc);
 			}
 		} catch (CorruptIndexException e) {
@@ -226,6 +243,24 @@ public class IndexUtil {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	public void search(){
+		try {
+			IndexReader reader = IndexReader.open(directory);
+			searcher = new IndexSearcher(reader);
+			TermQuery query = new TermQuery(new Term("contents","like"));
+			TopDocs tdoc = searcher.search(query, 10);
+			for(ScoreDoc sd:tdoc.scoreDocs){
+				Document doc = searcher.doc(sd.doc);
+				System.out.println("["+sd.doc+"]"+doc.get("names")+"["+doc.get("emails")+"]-->"+doc.get("id"));
+			}
+			reader.close();
+		} catch (CorruptIndexException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }

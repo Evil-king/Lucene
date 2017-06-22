@@ -46,4 +46,10 @@ public class TestLucene {
 		IndexUtil iu = new IndexUtil();
 		iu.update();
 	}
+	
+	@Test
+	public void testSearch(){
+		IndexUtil iu = new IndexUtil();
+		iu.search();
+	}
 }
