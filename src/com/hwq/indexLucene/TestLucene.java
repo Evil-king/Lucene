@@ -48,8 +48,22 @@ public class TestLucene {
 	}
 	
 	@Test
-	public void testSearch(){
+	public void testSearch01(){
 		IndexUtil iu = new IndexUtil();
-		iu.search();
+		iu.search01();
+	}
+	
+	@Test
+	public void testSearch02(){
+		IndexUtil iu = new IndexUtil();
+		for(int i=0;i<5;i++){
+			iu.search02();
+			System.out.println("--------------------");
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }
