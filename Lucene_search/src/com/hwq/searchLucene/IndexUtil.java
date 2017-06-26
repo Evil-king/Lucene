@@ -1,4 +1,4 @@
-package com.hwq.indexLucene;
+package com.hwq.searchLucene;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +68,9 @@ public class IndexUtil {
 				reader = IndexReader.open(directory);
 			}else{
 				IndexReader st = IndexReader.openIfChanged(reader);
-				if(st != null) reader = st;
+				if(st != null)
+				reader.close();//关闭之前的在赋值
+				reader = st;
 				return new IndexSearcher(reader);
 			}
 		} catch (CorruptIndexException e) {
@@ -134,81 +136,6 @@ public class IndexUtil {
 	}
 	
 	
-	public void merae(){
-		IndexWriter writer =null;
-		try {
-			 writer =
-					new IndexWriter(directory,new IndexWriterConfig(Version.LUCENE_35, new StandardAnalyzer(Version.LUCENE_35)));
-			/*
-			 * 会将索引合并为2段，这两段中的被删除的数据会被清空
-			 * 特别注意：此处Lucene在3.5之后不建议使用，因为会消耗大量的开销
-			 * Lucene会根据情况自动处理的
-			 */
-			 writer.forceMerge(2);
-		} catch (CorruptIndexException e) {
-			e.printStackTrace();
-		} catch (LockObtainFailedException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}finally{
-			try {
-				if(writer!=null)writer.close();
-			} catch (CorruptIndexException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}finally{
-				try {
-					if(writer!=null)writer.close();
-				} catch (CorruptIndexException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-	
-	
-	//强制清空
-	public void fourceDelete(){
-		IndexWriter writer =null;
-		try {
-			 writer =
-					new IndexWriter(directory,new IndexWriterConfig(Version.LUCENE_35, new StandardAnalyzer(Version.LUCENE_35)));
-			writer.forceMergeDeletes();
-		} catch (CorruptIndexException e) {
-			e.printStackTrace();
-		} catch (LockObtainFailedException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}finally{
-			try {
-				if(writer!=null)writer.close();
-			} catch (CorruptIndexException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	//回复被删除的
-	public void undelete(){
-		//使用IndexReader进行恢复
-		try {
-			//恢复删除时，把IndexReader的只读(readyOnle)设置为fasle
-			IndexReader reader = IndexReader.open(directory,false);
-			reader.undeleteAll();
-			reader.close();
-		} catch (CorruptIndexException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 	
 	//查询
 	public void query(){
@@ -292,42 +219,6 @@ public class IndexUtil {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
-	}
-	
-	public void search01(){
-		try {
-			IndexReader reader = IndexReader.open(directory);
-			IndexSearcher searcher = new IndexSearcher(reader);
-			TermQuery query = new TermQuery(new Term("contents","like"));
-			TopDocs tdoc = searcher.search(query, 10);
-			for(ScoreDoc sd:tdoc.scoreDocs){
-				Document doc = searcher.doc(sd.doc);
-				System.out.println("["+sd.doc+"]"+doc.get("names")+"["+doc.get("emails")+"]-->"+doc.get("id"));
-			}
-			reader.close();
-		} catch (CorruptIndexException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void search02(){
-		try {
-			IndexSearcher searcher = getSearch();
-			TermQuery query = new TermQuery(new Term("contents","like"));
-			TopDocs tdoc = searcher.search(query, 10);
-			for(ScoreDoc sd:tdoc.scoreDocs){
-				Document doc = searcher.doc(sd.doc);
-				System.out.println("["+sd.doc+"]"+doc.get("names")+"["+doc.get("emails")+"]-->"+doc.get("id"));
-			}
-			//这里就不能像01关闭reader 而是直接关闭searcher
-			searcher.close();
-		} catch (CorruptIndexException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 }
